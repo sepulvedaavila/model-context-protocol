@@ -1,5 +1,9 @@
-defmodule MCPS.Web.Router do
-  use MCPS.Web, :router
+defmodule McpsWeb.Router do
+  use Phoenix.Router
+
+  import Plug.Conn
+  import Phoenix.Controller
+  # use McpsWeb, :router
 
   pipeline :api do
     plug :accepts, ["json"]
@@ -12,7 +16,7 @@ defmodule MCPS.Web.Router do
     plug MCPS.Web.Plugs.Authorization
   end
 
-  scope "/api/v1", MCPS.Web do
+  scope "/api/v1", McpsWeb do
     pipe_through [:api, :auth]
 
     # Context endpoints
@@ -26,6 +30,14 @@ defmodule MCPS.Web.Router do
     # Transformer endpoints
     get "/transformers", TransformerController, :index
     get "/transformers/:id", TransformerController, :show
+  end
+
+  scope "/api/v1", McpsWebWeb do
+    pipe_through :api
+
+    # Public endpoints
+    get "/health", HealthController, :index
+    get "/metrics", MetricsController, :index
   end
 
   scope "/api/v1", MCPS.Web do

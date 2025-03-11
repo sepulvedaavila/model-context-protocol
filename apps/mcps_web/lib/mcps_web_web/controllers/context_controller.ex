@@ -8,15 +8,15 @@ defmodule McpsWebWeb.ContextController do
 
   # Swagger documentation
   swagger_path :index do
-    get "/api/contexts"
-    summary "List contexts"
-    description "List all contexts with optional filtering"
-    parameter :query, :owner_id, :string, "Filter by owner ID", required: false
-    parameter :query, :tags, :array, "Filter by tags", items: [type: :string], required: false
-    parameter :query, :limit, :integer, "Maximum number of results", required: false
-    parameter :query, :offset, :integer, "Offset for pagination", required: false
-    response 200, "Success", Schema.array(:Context)
-    response 401, "Unauthorized"
+    get("/api/contexts")
+    summary("List contexts")
+    description("List all contexts with optional filtering")
+    parameter(:query, :owner_id, :string, "Filter by owner ID", required: false)
+    parameter(:query, :tags, :array, "Filter by tags", items: [type: :string], required: false)
+    parameter(:query, :limit, :integer, "Maximum number of results", required: false)
+    parameter(:query, :offset, :integer, "Offset for pagination", required: false)
+    response(200, "Success", Schema.array(:Context))
+    response(401, "Unauthorized")
   end
 
   def index(conn, params) do
@@ -35,22 +35,29 @@ defmodule McpsWebWeb.ContextController do
 
     # Record telemetry
     end_time = System.monotonic_time()
-    Metrics.observe([:mcps, :web, :context, :list], %{
-      duration: end_time - start_time
-    }, %{
-      user_id: conn.assigns[:user_id],
-      filter_count: length(Enum.filter(filters, fn {_, v} -> v != nil end)),
-      result_count: length(contexts)
-    })
+
+    Metrics.observe(
+      [:mcps, :web, :context, :list],
+      %{
+        duration: end_time - start_time
+      },
+      %{
+        user_id: conn.assigns[:user_id],
+        filter_count: length(Enum.filter(filters, fn {_, v} -> v != nil end)),
+        result_count: length(contexts)
+      }
+    )
 
     render(conn, :index, contexts: contexts)
   end
 
   swagger_path :create do
-    post "/api/contexts"
-    summary "Create context"
-    description "Create a new context"
-    parameter :body, :context, :object, "Context object", required: true,
+    post("/api/contexts")
+    summary("Create context")
+    description("Create a new context")
+
+    parameter(:body, :context, :object, "Context object",
+      required: true,
       schema: %{
         type: :object,
         required: [:id, :content],
@@ -62,9 +69,11 @@ defmodule McpsWebWeb.ContextController do
           tags: %{type: :array, items: %{type: :string}, description: "Tags"}
         }
       }
-    response 201, "Created", Schema.ref(:Context)
-    response 400, "Bad Request"
-    response 401, "Unauthorized"
+    )
+
+    response(201, "Created", Schema.ref(:Context))
+    response(400, "Bad Request")
+    response(401, "Unauthorized")
   end
 
   def create(conn, params) do
@@ -90,13 +99,18 @@ defmodule McpsWebWeb.ContextController do
           {:ok, created} ->
             # Record telemetry
             end_time = System.monotonic_time()
-            Metrics.observe([:mcps, :web, :context, :create], %{
-              duration: end_time - start_time
-            }, %{
-              user_id: conn.assigns[:user_id],
-              context_id: created.id,
-              result: :success
-            })
+
+            Metrics.observe(
+              [:mcps, :web, :context, :create],
+              %{
+                duration: end_time - start_time
+              },
+              %{
+                user_id: conn.assigns[:user_id],
+                context_id: created.id,
+                result: :success
+              }
+            )
 
             conn
             |> put_status(:created)
@@ -105,13 +119,18 @@ defmodule McpsWebWeb.ContextController do
           {:error, changeset} ->
             # Record telemetry
             end_time = System.monotonic_time()
-            Metrics.observe([:mcps, :web, :context, :create], %{
-              duration: end_time - start_time
-            }, %{
-              user_id: conn.assigns[:user_id],
-              result: :error,
-              reason: "database_error"
-            })
+
+            Metrics.observe(
+              [:mcps, :web, :context, :create],
+              %{
+                duration: end_time - start_time
+              },
+              %{
+                user_id: conn.assigns[:user_id],
+                result: :error,
+                reason: "database_error"
+              }
+            )
 
             conn
             |> put_status(:bad_request)
@@ -121,13 +140,18 @@ defmodule McpsWebWeb.ContextController do
       {:error, reason} ->
         # Record telemetry
         end_time = System.monotonic_time()
-        Metrics.observe([:mcps, :web, :context, :create], %{
-          duration: end_time - start_time
-        }, %{
-          user_id: conn.assigns[:user_id],
-          result: :error,
-          reason: "validation_error"
-        })
+
+        Metrics.observe(
+          [:mcps, :web, :context, :create],
+          %{
+            duration: end_time - start_time
+          },
+          %{
+            user_id: conn.assigns[:user_id],
+            result: :error,
+            reason: "validation_error"
+          }
+        )
 
         conn
         |> put_status(:bad_request)
@@ -136,13 +160,13 @@ defmodule McpsWebWeb.ContextController do
   end
 
   swagger_path :show do
-    get "/api/contexts/{id}"
-    summary "Get context"
-    description "Get a context by ID"
-    parameter :path, :id, :string, "Context ID", required: true
-    response 200, "Success", Schema.ref(:Context)
-    response 401, "Unauthorized"
-    response 404, "Not Found"
+    get("/api/contexts/{id}")
+    summary("Get context")
+    description("Get a context by ID")
+    parameter(:path, :id, :string, "Context ID", required: true)
+    response(200, "Success", Schema.ref(:Context))
+    response(401, "Unauthorized")
+    response(404, "Not Found")
   end
 
   def show(conn, %{"id" => id}) do
@@ -152,27 +176,37 @@ defmodule McpsWebWeb.ContextController do
       {:ok, context} ->
         # Record telemetry
         end_time = System.monotonic_time()
-        Metrics.observe([:mcps, :web, :context, :get], %{
-          duration: end_time - start_time
-        }, %{
-          user_id: conn.assigns[:user_id],
-          context_id: id,
-          result: :success
-        })
+
+        Metrics.observe(
+          [:mcps, :web, :context, :get],
+          %{
+            duration: end_time - start_time
+          },
+          %{
+            user_id: conn.assigns[:user_id],
+            context_id: id,
+            result: :success
+          }
+        )
 
         render(conn, :show, context: context)
 
       {:error, :not_found} ->
         # Record telemetry
         end_time = System.monotonic_time()
-        Metrics.observe([:mcps, :web, :context, :get], %{
-          duration: end_time - start_time
-        }, %{
-          user_id: conn.assigns[:user_id],
-          context_id: id,
-          result: :error,
-          reason: "not_found"
-        })
+
+        Metrics.observe(
+          [:mcps, :web, :context, :get],
+          %{
+            duration: end_time - start_time
+          },
+          %{
+            user_id: conn.assigns[:user_id],
+            context_id: id,
+            result: :error,
+            reason: "not_found"
+          }
+        )
 
         conn
         |> put_status(:not_found)
@@ -181,11 +215,13 @@ defmodule McpsWebWeb.ContextController do
   end
 
   swagger_path :update do
-    put "/api/contexts/{id}"
-    summary "Update context"
-    description "Update an existing context"
-    parameter :path, :id, :string, "Context ID", required: true
-    parameter :body, :context, :object, "Context object", required: true,
+    put("/api/contexts/{id}")
+    summary("Update context")
+    description("Update an existing context")
+    parameter(:path, :id, :string, "Context ID", required: true)
+
+    parameter(:body, :context, :object, "Context object",
+      required: true,
       schema: %{
         type: :object,
         properties: %{
@@ -195,10 +231,12 @@ defmodule McpsWebWeb.ContextController do
           tags: %{type: :array, items: %{type: :string}, description: "Tags"}
         }
       }
-    response 200, "Success", Schema.ref(:Context)
-    response 400, "Bad Request"
-    response 401, "Unauthorized"
-    response 404, "Not Found"
+    )
+
+    response(200, "Success", Schema.ref(:Context))
+    response(400, "Bad Request")
+    response(401, "Unauthorized")
+    response(404, "Not Found")
   end
 
   def update(conn, %{"id" => id} = params) do
@@ -214,39 +252,50 @@ defmodule McpsWebWeb.ContextController do
           |> json(%{error: "You don't have permission to update this context"})
         else
           # Update context
-          updated = %{existing |
-            content: params["content"] || existing.content,
-            metadata: params["metadata"] || existing.metadata,
-            ttl: params["ttl"] || existing.ttl,
-            tags: params["tags"] || existing.tags,
-            updated_at: DateTime.utc_now()
+          updated = %{
+            existing
+            | content: params["content"] || existing.content,
+              metadata: params["metadata"] || existing.metadata,
+              ttl: params["ttl"] || existing.ttl,
+              tags: params["tags"] || existing.tags,
+              updated_at: DateTime.utc_now()
           }
 
           case Repo.update_context(updated) do
             {:ok, context} ->
               # Record telemetry
               end_time = System.monotonic_time()
-              Metrics.observe([:mcps, :web, :context, :update], %{
-                duration: end_time - start_time
-              }, %{
-                user_id: conn.assigns[:user_id],
-                context_id: id,
-                result: :success
-              })
+
+              Metrics.observe(
+                [:mcps, :web, :context, :update],
+                %{
+                  duration: end_time - start_time
+                },
+                %{
+                  user_id: conn.assigns[:user_id],
+                  context_id: id,
+                  result: :success
+                }
+              )
 
               render(conn, :show, context: context)
 
             {:error, changeset} ->
               # Record telemetry
               end_time = System.monotonic_time()
-              Metrics.observe([:mcps, :web, :context, :update], %{
-                duration: end_time - start_time
-              }, %{
-                user_id: conn.assigns[:user_id],
-                context_id: id,
-                result: :error,
-                reason: "database_error"
-              })
+
+              Metrics.observe(
+                [:mcps, :web, :context, :update],
+                %{
+                  duration: end_time - start_time
+                },
+                %{
+                  user_id: conn.assigns[:user_id],
+                  context_id: id,
+                  result: :error,
+                  reason: "database_error"
+                }
+              )
 
               conn
               |> put_status(:bad_request)
@@ -257,14 +306,19 @@ defmodule McpsWebWeb.ContextController do
       {:error, :not_found} ->
         # Record telemetry
         end_time = System.monotonic_time()
-        Metrics.observe([:mcps, :web, :context, :update], %{
-          duration: end_time - start_time
-        }, %{
-          user_id: conn.assigns[:user_id],
-          context_id: id,
-          result: :error,
-          reason: "not_found"
-        })
+
+        Metrics.observe(
+          [:mcps, :web, :context, :update],
+          %{
+            duration: end_time - start_time
+          },
+          %{
+            user_id: conn.assigns[:user_id],
+            context_id: id,
+            result: :error,
+            reason: "not_found"
+          }
+        )
 
         conn
         |> put_status(:not_found)
@@ -273,13 +327,13 @@ defmodule McpsWebWeb.ContextController do
   end
 
   swagger_path :delete do
-    delete "/api/contexts/{id}"
-    summary "Delete context"
-    description "Delete a context by ID"
-    parameter :path, :id, :string, "Context ID", required: true
-    response 200, "Success"
-    response 401, "Unauthorized"
-    response 404, "Not Found"
+    PhoenixSwagger.Path.delete("/api/contexts/{id}")
+    summary("Delete context")
+    description("Delete a context by ID")
+    parameter(:path, :id, :string, "Context ID", required: true)
+    response(200, "Success")
+    response(401, "Unauthorized")
+    response(404, "Not Found")
   end
 
   def delete(conn, %{"id" => id}) do
@@ -299,13 +353,18 @@ defmodule McpsWebWeb.ContextController do
             {:ok, _} ->
               # Record telemetry
               end_time = System.monotonic_time()
-              Metrics.observe([:mcps, :web, :context, :delete], %{
-                duration: end_time - start_time
-              }, %{
-                user_id: conn.assigns[:user_id],
-                context_id: id,
-                result: :success
-              })
+
+              Metrics.observe(
+                [:mcps, :web, :context, :delete],
+                %{
+                  duration: end_time - start_time
+                },
+                %{
+                  user_id: conn.assigns[:user_id],
+                  context_id: id,
+                  result: :success
+                }
+              )
 
               conn
               |> put_status(:ok)
@@ -314,14 +373,19 @@ defmodule McpsWebWeb.ContextController do
             {:error, reason} ->
               # Record telemetry
               end_time = System.monotonic_time()
-              Metrics.observe([:mcps, :web, :context, :delete], %{
-                duration: end_time - start_time
-              }, %{
-                user_id: conn.assigns[:user_id],
-                context_id: id,
-                result: :error,
-                reason: "database_error"
-              })
+
+              Metrics.observe(
+                [:mcps, :web, :context, :delete],
+                %{
+                  duration: end_time - start_time
+                },
+                %{
+                  user_id: conn.assigns[:user_id],
+                  context_id: id,
+                  result: :error,
+                  reason: "database_error"
+                }
+              )
 
               conn
               |> put_status(:internal_server_error)
@@ -332,14 +396,19 @@ defmodule McpsWebWeb.ContextController do
       {:error, :not_found} ->
         # Record telemetry
         end_time = System.monotonic_time()
-        Metrics.observe([:mcps, :web, :context, :delete], %{
-          duration: end_time - start_time
-        }, %{
-          user_id: conn.assigns[:user_id],
-          context_id: id,
-          result: :error,
-          reason: "not_found"
-        })
+
+        Metrics.observe(
+          [:mcps, :web, :context, :delete],
+          %{
+            duration: end_time - start_time
+          },
+          %{
+            user_id: conn.assigns[:user_id],
+            context_id: id,
+            result: :error,
+            reason: "not_found"
+          }
+        )
 
         conn
         |> put_status(:not_found)
@@ -348,13 +417,13 @@ defmodule McpsWebWeb.ContextController do
   end
 
   swagger_path :list_versions do
-    get "/api/contexts/{id}/versions"
-    summary "List context versions"
-    description "List all versions of a context"
-    parameter :path, :id, :string, "Context ID", required: true
-    response 200, "Success", Schema.array(:ContextVersion)
-    response 401, "Unauthorized"
-    response 404, "Not Found"
+    get("/api/contexts/{id}/versions")
+    summary("List context versions")
+    description("List all versions of a context")
+    parameter(:path, :id, :string, "Context ID", required: true)
+    response(200, "Success", Schema.array(:ContextVersion))
+    response(401, "Unauthorized")
+    response(404, "Not Found")
   end
 
   def list_versions(conn, %{"id" => id}) do
@@ -366,14 +435,14 @@ defmodule McpsWebWeb.ContextController do
   end
 
   swagger_path :show_version do
-    get "/api/contexts/{id}/versions/{version}"
-    summary "Get context version"
-    description "Get a specific version of a context"
-    parameter :path, :id, :string, "Context ID", required: true
-    parameter :path, :version, :integer, "Version number", required: true
-    response 200, "Success", Schema.ref(:Context)
-    response 401, "Unauthorized"
-    response 404, "Not Found"
+    get("/api/contexts/{id}/versions/{version}")
+    summary("Get context version")
+    description("Get a specific version of a context")
+    parameter(:path, :id, :string, "Context ID", required: true)
+    parameter(:path, :version, :integer, "Version number", required: true)
+    response(200, "Success", Schema.ref(:Context))
+    response(401, "Unauthorized")
+    response(404, "Not Found")
   end
 
   def show_version(conn, %{"id" => id, "version" => version_str}) do
@@ -391,29 +460,39 @@ defmodule McpsWebWeb.ContextController do
         {:ok, context} ->
           # Record telemetry
           end_time = System.monotonic_time()
-          Metrics.observe([:mcps, :web, :context, :get_version], %{
-            duration: end_time - start_time
-          }, %{
-            user_id: conn.assigns[:user_id],
-            context_id: id,
-            version: version,
-            result: :success
-          })
+
+          Metrics.observe(
+            [:mcps, :web, :context, :get_version],
+            %{
+              duration: end_time - start_time
+            },
+            %{
+              user_id: conn.assigns[:user_id],
+              context_id: id,
+              version: version,
+              result: :success
+            }
+          )
 
           render(conn, :show, context: context)
 
         {:error, :not_found} ->
           # Record telemetry
           end_time = System.monotonic_time()
-          Metrics.observe([:mcps, :web, :context, :get_version], %{
-            duration: end_time - start_time
-          }, %{
-            user_id: conn.assigns[:user_id],
-            context_id: id,
-            version: version,
-            result: :error,
-            reason: "not_found"
-          })
+
+          Metrics.observe(
+            [:mcps, :web, :context, :get_version],
+            %{
+              duration: end_time - start_time
+            },
+            %{
+              user_id: conn.assigns[:user_id],
+              context_id: id,
+              version: version,
+              result: :error,
+              reason: "not_found"
+            }
+          )
 
           conn
           |> put_status(:not_found)
@@ -425,12 +504,14 @@ defmodule McpsWebWeb.ContextController do
   # Helper functions
 
   defp parse_int_param(nil, default), do: default
+
   defp parse_int_param(param, default) when is_binary(param) do
     case Integer.parse(param) do
       {value, ""} -> value
       _ -> default
     end
   end
+
   defp parse_int_param(param, _default) when is_integer(param), do: param
   defp parse_int_param(_, default), do: default
 

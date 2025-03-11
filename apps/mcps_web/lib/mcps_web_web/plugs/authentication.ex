@@ -11,7 +11,6 @@ defmodule McpsWebWeb.Plugs.Authentication do
   def call(conn, _opts) do
     with {auth_type, token} <- get_auth_header(conn),
          {:ok, user_id} <- authenticate(auth_type, token) do
-
       # Add user_id to conn assigns
       conn
       |> assign(:authenticated, true)
@@ -26,7 +25,7 @@ defmodule McpsWebWeb.Plugs.Authentication do
         end
 
       {:error, reason} ->
-        Logger.warn("Authentication failed: #{reason}")
+        Logger.warning("Authentication failed: #{reason}")
         unauthorized(conn)
     end
   end
@@ -56,7 +55,8 @@ defmodule McpsWebWeb.Plugs.Authentication do
     # For now, we'll just check if it's a valid format
     if String.length(token) >= 32 do
       # Extract user ID from API key (in production, would look up in database)
-      {:ok, "api_user_#{:crypto.hash(:md5, token) |> Base.encode16(case: :lower) |> binary_part(0, 8)}"}
+      {:ok,
+       "api_user_#{:crypto.hash(:md5, token) |> Base.encode16(case: :lower) |> binary_part(0, 8)}"}
     else
       {:error, "invalid_api_key"}
     end
@@ -69,7 +69,12 @@ defmodule McpsWebWeb.Plugs.Authentication do
     case String.split(token, ".") do
       [_header, _payload, _signature] ->
         # Return a fake user ID based on token hash
-        {:ok, %{"sub" => "user_#{:crypto.hash(:md5, token) |> Base.encode16(case: :lower) |> binary_part(0, 8)}"}}
+        {:ok,
+         %{
+           "sub" =>
+             "user_#{:crypto.hash(:md5, token) |> Base.encode16(case: :lower) |> binary_part(0, 8)}"
+         }}
+
       _ ->
         {:error, "invalid_token_format"}
     end

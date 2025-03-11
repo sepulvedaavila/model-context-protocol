@@ -8,15 +8,15 @@ defmodule McpsWebWeb.PipelineController do
 
   # Swagger documentation
   swagger_path :index do
-    get "/api/pipelines"
-    summary "List pipelines"
-    description "List all transformation pipelines with optional filtering"
-    parameter :query, :owner_id, :string, "Filter by owner ID", required: false
-    parameter :query, :active, :boolean, "Filter by active status", required: false
-    parameter :query, :limit, :integer, "Maximum number of results", required: false
-    parameter :query, :offset, :integer, "Offset for pagination", required: false
-    response 200, "Success", Schema.array(:Pipeline)
-    response 401, "Unauthorized"
+    get("/api/pipelines")
+    summary("List pipelines")
+    description("List all transformation pipelines with optional filtering")
+    parameter(:query, :owner_id, :string, "Filter by owner ID", required: false)
+    parameter(:query, :active, :boolean, "Filter by active status", required: false)
+    parameter(:query, :limit, :integer, "Maximum number of results", required: false)
+    parameter(:query, :offset, :integer, "Offset for pagination", required: false)
+    response(200, "Success", Schema.array(:Pipeline))
+    response(401, "Unauthorized")
   end
 
   def index(conn, _params) do
@@ -28,15 +28,20 @@ defmodule McpsWebWeb.PipelineController do
   end
 
   swagger_path :create do
-    post "/api/pipelines"
-    summary "Create pipeline"
-    description "Create a new transformation pipeline"
-    parameter :body, :pipeline, :object, "Pipeline object", required: true,
+    post("/api/pipelines")
+    summary("Create pipeline")
+    description("Create a new transformation pipeline")
+
+    parameter(:body, :pipeline, :object, "Pipeline object",
+      required: true,
       schema: %{
         type: :object,
         required: [:name, :transformers],
         properties: %{
-          id: %{type: :string, description: "Pipeline ID (optional, will be generated if not provided)"},
+          id: %{
+            type: :string,
+            description: "Pipeline ID (optional, will be generated if not provided)"
+          },
           name: %{type: :string, description: "Pipeline name"},
           description: %{type: :string, description: "Pipeline description"},
           transformers: %{
@@ -54,9 +59,11 @@ defmodule McpsWebWeb.PipelineController do
           active: %{type: :boolean, description: "Whether the pipeline is active"}
         }
       }
-    response 201, "Created", Schema.ref(:Pipeline)
-    response 400, "Bad Request"
-    response 401, "Unauthorized"
+    )
+
+    response(201, "Created", Schema.ref(:Pipeline))
+    response(400, "Bad Request")
+    response(401, "Unauthorized")
   end
 
   def create(conn, params) do
@@ -88,13 +95,18 @@ defmodule McpsWebWeb.PipelineController do
 
         # Record telemetry
         end_time = System.monotonic_time()
-        Metrics.observe([:mcps, :web, :pipeline, :create], %{
-          duration: end_time - start_time
-        }, %{
-          user_id: conn.assigns[:user_id],
-          pipeline_id: pipeline.id,
-          result: :success
-        })
+
+        Metrics.observe(
+          [:mcps, :web, :pipeline, :create],
+          %{
+            duration: end_time - start_time
+          },
+          %{
+            user_id: conn.assigns[:user_id],
+            pipeline_id: pipeline.id,
+            result: :success
+          }
+        )
 
         conn
         |> put_status(:created)
@@ -103,13 +115,18 @@ defmodule McpsWebWeb.PipelineController do
       {:error, reason} ->
         # Record telemetry
         end_time = System.monotonic_time()
-        Metrics.observe([:mcps, :web, :pipeline, :create], %{
-          duration: end_time - start_time
-        }, %{
-          user_id: conn.assigns[:user_id],
-          result: :error,
-          reason: "validation_error"
-        })
+
+        Metrics.observe(
+          [:mcps, :web, :pipeline, :create],
+          %{
+            duration: end_time - start_time
+          },
+          %{
+            user_id: conn.assigns[:user_id],
+            result: :error,
+            reason: "validation_error"
+          }
+        )
 
         conn
         |> put_status(:bad_request)
@@ -118,13 +135,13 @@ defmodule McpsWebWeb.PipelineController do
   end
 
   swagger_path :show do
-    get "/api/pipelines/{id}"
-    summary "Get pipeline"
-    description "Get a pipeline by ID"
-    parameter :path, :id, :string, "Pipeline ID", required: true
-    response 200, "Success", Schema.ref(:Pipeline)
-    response 401, "Unauthorized"
-    response 404, "Not Found"
+    get("/api/pipelines/{id}")
+    summary("Get pipeline")
+    description("Get a pipeline by ID")
+    parameter(:path, :id, :string, "Pipeline ID", required: true)
+    response(200, "Success", Schema.ref(:Pipeline))
+    response(401, "Unauthorized")
+    response(404, "Not Found")
   end
 
   def show(conn, %{"id" => _id}) do
@@ -136,11 +153,13 @@ defmodule McpsWebWeb.PipelineController do
   end
 
   swagger_path :update do
-    put "/api/pipelines/{id}"
-    summary "Update pipeline"
-    description "Update an existing pipeline"
-    parameter :path, :id, :string, "Pipeline ID", required: true
-    parameter :body, :pipeline, :object, "Pipeline object", required: true,
+    put("/api/pipelines/{id}")
+    summary("Update pipeline")
+    description("Update an existing pipeline")
+    parameter(:path, :id, :string, "Pipeline ID", required: true)
+
+    parameter(:body, :pipeline, :object, "Pipeline object",
+      required: true,
       schema: %{
         type: :object,
         properties: %{
@@ -161,10 +180,12 @@ defmodule McpsWebWeb.PipelineController do
           active: %{type: :boolean, description: "Whether the pipeline is active"}
         }
       }
-    response 200, "Success", Schema.ref(:Pipeline)
-    response 400, "Bad Request"
-    response 401, "Unauthorized"
-    response 404, "Not Found"
+    )
+
+    response(200, "Success", Schema.ref(:Pipeline))
+    response(400, "Bad Request")
+    response(401, "Unauthorized")
+    response(404, "Not Found")
   end
 
   def update(conn, %{"id" => _id}) do
@@ -176,13 +197,13 @@ defmodule McpsWebWeb.PipelineController do
   end
 
   swagger_path :delete do
-    delete "/api/pipelines/{id}"
-    summary "Delete pipeline"
-    description "Delete a pipeline by ID"
-    parameter :path, :id, :string, "Pipeline ID", required: true
-    response 200, "Success"
-    response 401, "Unauthorized"
-    response 404, "Not Found"
+    PhoenixSwagger.Path.delete("/api/pipelines/{id}")
+    summary("Delete pipeline")
+    description("Delete a pipeline by ID")
+    parameter(:path, :id, :string, "Pipeline ID", required: true)
+    response(200, "Success")
+    response(401, "Unauthorized")
+    response(404, "Not Found")
   end
 
   def delete(conn, %{"id" => _id}) do
@@ -194,15 +215,15 @@ defmodule McpsWebWeb.PipelineController do
   end
 
   swagger_path :apply_pipeline do
-    post "/api/pipelines/{id}/apply/{context_id}"
-    summary "Apply pipeline"
-    description "Apply a pipeline to a context"
-    parameter :path, :id, :string, "Pipeline ID", required: true
-    parameter :path, :context_id, :string, "Context ID", required: true
-    response 200, "Success", Schema.ref(:Context)
-    response 400, "Bad Request"
-    response 401, "Unauthorized"
-    response 404, "Not Found"
+    post("/api/pipelines/{id}/apply/{context_id}")
+    summary("Apply pipeline")
+    description("Apply a pipeline to a context")
+    parameter(:path, :id, :string, "Pipeline ID", required: true)
+    parameter(:path, :context_id, :string, "Context ID", required: true)
+    response(200, "Success", Schema.ref(:Context))
+    response(400, "Bad Request")
+    response(401, "Unauthorized")
+    response(404, "Not Found")
   end
 
   def apply_pipeline(conn, %{"id" => pipeline_id, "context_id" => context_id}) do
@@ -214,17 +235,21 @@ defmodule McpsWebWeb.PipelineController do
          {:ok, pipeline} <- get_pipeline(pipeline_id),
          # Apply pipeline
          {:ok, transformed} <- Pipeline.apply(pipeline, context) do
-
       # Record telemetry
       end_time = System.monotonic_time()
-      Metrics.observe([:mcps, :web, :pipeline, :apply], %{
-        duration: end_time - start_time
-      }, %{
-        user_id: conn.assigns[:user_id],
-        pipeline_id: pipeline_id,
-        context_id: context_id,
-        result: :success
-      })
+
+      Metrics.observe(
+        [:mcps, :web, :pipeline, :apply],
+        %{
+          duration: end_time - start_time
+        },
+        %{
+          user_id: conn.assigns[:user_id],
+          pipeline_id: pipeline_id,
+          context_id: context_id,
+          result: :success
+        }
+      )
 
       # Return transformed context
       conn
@@ -233,15 +258,20 @@ defmodule McpsWebWeb.PipelineController do
       {:error, :not_found} ->
         # Record telemetry
         end_time = System.monotonic_time()
-        Metrics.observe([:mcps, :web, :pipeline, :apply], %{
-          duration: end_time - start_time
-        }, %{
-          user_id: conn.assigns[:user_id],
-          pipeline_id: pipeline_id,
-          context_id: context_id,
-          result: :error,
-          reason: "not_found"
-        })
+
+        Metrics.observe(
+          [:mcps, :web, :pipeline, :apply],
+          %{
+            duration: end_time - start_time
+          },
+          %{
+            user_id: conn.assigns[:user_id],
+            pipeline_id: pipeline_id,
+            context_id: context_id,
+            result: :error,
+            reason: "not_found"
+          }
+        )
 
         conn
         |> put_status(:not_found)
@@ -250,15 +280,20 @@ defmodule McpsWebWeb.PipelineController do
       {:error, reason} ->
         # Record telemetry
         end_time = System.monotonic_time()
-        Metrics.observe([:mcps, :web, :pipeline, :apply], %{
-          duration: end_time - start_time
-        }, %{
-          user_id: conn.assigns[:user_id],
-          pipeline_id: pipeline_id,
-          context_id: context_id,
-          result: :error,
-          reason: inspect(reason)
-        })
+
+        Metrics.observe(
+          [:mcps, :web, :pipeline, :apply],
+          %{
+            duration: end_time - start_time
+          },
+          %{
+            user_id: conn.assigns[:user_id],
+            pipeline_id: pipeline_id,
+            context_id: context_id,
+            result: :error,
+            reason: inspect(reason)
+          }
+        )
 
         conn
         |> put_status(:bad_request)
@@ -298,7 +333,8 @@ defmodule McpsWebWeb.PipelineController do
       name: "Dummy Pipeline",
       description: "A dummy pipeline for testing",
       transformers: [
-        {MCPS.Transform.Transformers.TextNormalizer, [fields: ["text"], lowercase: true, trim: true]}
+        {MCPS.Transform.Transformers.TextNormalizer,
+         [fields: ["text"], lowercase: true, trim: true]}
       ],
       owner_id: "system",
       active: true,

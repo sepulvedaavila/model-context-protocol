@@ -1,5 +1,5 @@
 defmodule MCPS.Web.ContextController do
-  use MCPS.Web, :controller
+  use McpsWebWeb, :controller
 
   alias MCPS.Management.ContextManager
   alias MCPS.Transform.PipelineManager
@@ -32,12 +32,13 @@ defmodule MCPS.Web.ContextController do
     user_id = conn.assigns.current_user.id
 
     # Create context
-    with {:ok, context} <- ContextManager.create(content, [
-      metadata: metadata,
-      ttl: ttl,
-      tags: tags,
-      owner_id: user_id
-    ]) do
+    with {:ok, context} <-
+           ContextManager.create(content,
+             metadata: metadata,
+             ttl: ttl,
+             tags: tags,
+             owner_id: user_id
+           ) do
       conn
       |> put_status(:created)
       |> put_resp_header("location", ~p"/api/v1/contexts/#{context.id}")
@@ -62,12 +63,13 @@ defmodule MCPS.Web.ContextController do
     user_id = conn.assigns.current_user.id
 
     # Update context
-    with {:ok, updated_context} <- ContextManager.update(id, content, [
-      metadata: metadata,
-      tags: tags,
-      change_description: change_description,
-      user_id: user_id
-    ]) do
+    with {:ok, updated_context} <-
+           ContextManager.update(id, content,
+             metadata: metadata,
+             tags: tags,
+             change_description: change_description,
+             user_id: user_id
+           ) do
       render(conn, :show, context: updated_context)
     end
   end
@@ -91,30 +93,39 @@ defmodule MCPS.Web.ContextController do
     with {:ok, context} <- ContextManager.get(context_id),
          {:ok, pipeline} <- PipelineManager.get(pipeline_id),
          {:ok, transformed_context} <- MCPS.Transform.Pipeline.apply(pipeline, context) do
-
       # Record telemetry
       end_time = System.monotonic_time()
-      Metrics.observe([:mcps, :web, :apply_pipeline], %{
-        duration: end_time - start_time
-      }, %{
-        context_id: context_id,
-        pipeline_id: pipeline_id,
-        result: :success
-      })
+
+      Metrics.observe(
+        [:mcps, :web, :apply_pipeline],
+        %{
+          duration: end_time - start_time
+        },
+        %{
+          context_id: context_id,
+          pipeline_id: pipeline_id,
+          result: :success
+        }
+      )
 
       render(conn, :show, context: transformed_context)
     else
       error ->
         # Record telemetry for error
         end_time = System.monotonic_time()
-        Metrics.observe([:mcps, :web, :apply_pipeline], %{
-          duration: end_time - start_time
-        }, %{
-          context_id: context_id,
-          pipeline_id: pipeline_id,
-          result: :error,
-          error: inspect(error)
-        })
+
+        Metrics.observe(
+          [:mcps, :web, :apply_pipeline],
+          %{
+            duration: end_time - start_time
+          },
+          %{
+            context_id: context_id,
+            pipeline_id: pipeline_id,
+            result: :error,
+            error: inspect(error)
+          }
+        )
 
         error
     end
