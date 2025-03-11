@@ -1,4 +1,4 @@
-defmodule ModelContextProtocol.MixProject do
+defmodule MCPS.MixProject do
   use Mix.Project
 
   def project do
@@ -35,7 +35,7 @@ defmodule ModelContextProtocol.MixProject do
 
   defp releases do
     [
-      model_context_protocol: [
+      mcps: [
         include_executables_for: [:unix],
         applications: [
           mcps_core: :permanent,

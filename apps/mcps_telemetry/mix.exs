@@ -27,7 +27,7 @@ defmodule MCPS.Telemetry.MixProject do
     [
       {:mcps_core, in_umbrella: true},
       {:telemetry, "~> 1.2"},
-      {:telemetry_metrics, "~> 0.6"},
+      {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"}
     ]
   end

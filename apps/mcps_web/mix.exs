@@ -1,4 +1,4 @@
-defmodule McpsWeb.MixProject do
+defmodule MCPS.Web.MixProject do
   use Mix.Project
 
   def project do
