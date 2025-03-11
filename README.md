@@ -60,7 +60,7 @@ MCPS is built as an Elixir umbrella application with the following components:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/mcps.git
+   git clone https://github.com/sepulvedaavila/model-context-protocol.git
    cd mcps
    ```
 
