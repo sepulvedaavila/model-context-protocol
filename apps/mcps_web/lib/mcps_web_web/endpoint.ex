@@ -25,6 +25,12 @@ defmodule McpsWebWeb.Endpoint do
     gzip: false,
     only: McpsWebWeb.static_paths()
 
+  # Serve Swagger UI assets
+  plug Plug.Static,
+    at: "/api/swagger",
+    from: {:mcps_web, "priv/static"},
+    only: ~w(swagger.json)
+
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.
   if code_reloading? do
@@ -43,5 +49,12 @@ defmodule McpsWebWeb.Endpoint do
   plug Plug.MethodOverride
   plug Plug.Head
   plug Plug.Session, @session_options
+
+  # Add CORS support
+  plug CORSPlug,
+    origin: ["*"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    headers: ["Authorization", "Content-Type", "Accept", "Origin", "User-Agent", "DNT", "Cache-Control", "X-Mx-ReqToken", "Keep-Alive", "X-Requested-With", "If-Modified-Since", "X-CSRF-Token"]
+
   plug McpsWebWeb.Router
 end

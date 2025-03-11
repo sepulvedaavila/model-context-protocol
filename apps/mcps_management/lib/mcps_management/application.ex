@@ -8,8 +8,11 @@ defmodule McpsManagement.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      # Starts a worker by calling: McpsManagement.Worker.start_link(arg)
-      # {McpsManagement.Worker, arg}
+      # Start the Ecto repository
+      MCPS.Management.Repo,
+
+      # Start the context cache
+      MCPS.Management.Cache
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

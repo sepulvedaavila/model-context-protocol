@@ -46,32 +46,32 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
-# Import environment specific config. This must remain at the bottom
-# of this file so it overrides the configuration defined above.
-import_config "#{config_env()}.exs"
+# Configure phoenix_swagger
+config :phoenix_swagger, json_library: Jason
 
-config :mcps_web,
-  ecto_repos: [McpsWeb.Repo],
-  generators: [timestamp_type: :utc_datetime]
+# Configure Swagger
+config :mcps_web, :phoenix_swagger,
+  swagger_files: %{
+    "priv/static/swagger.json" => [
+      router: McpsWebWeb.Router,
+      endpoint: McpsWebWeb.Endpoint
+    ]
+  }
 
-# Configures the endpoint
-config :mcps_web, McpsWebWeb.Endpoint,
-  url: [host: "localhost"],
-  adapter: Bandit.PhoenixAdapter,
-  render_errors: [
-    formats: [json: McpsWebWeb.ErrorJSON],
-    layout: false
-  ],
-  pubsub_server: McpsWeb.PubSub,
-  live_view: [signing_salt: "92iSocnv"]
+# Configure rate limiting
+config :mcps_web, :rate_limit,
+  max_requests: 100,
+  interval_seconds: 60
 
-# Configures Elixir's Logger
-config :logger, :console,
-  format: "$time $metadata[$level] $message\n",
-  metadata: [:request_id]
+# Configure context size limits
+config :mcps_management,
+  max_context_size_bytes: 10_485_760,  # 10 MB
+  max_contexts_per_user: 1000
 
-# Use Jason for JSON parsing in Phoenix
-config :phoenix, :json_library, Jason
+# Configure transformation pipeline
+config :mcps_transform,
+  max_pipeline_steps: 20,
+  max_concurrent_transformations: 10
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
